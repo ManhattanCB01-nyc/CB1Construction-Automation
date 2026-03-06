@@ -1,0 +1,36 @@
+name: Run DOB Build Daily
+
+on:
+  workflow_dispatch: # Allows manual trigger
+  schedule:
+    - cron: '00 14 * * *' # Runs at 2:00 PM UTC (adjust as needed)
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Service Account Key File
+        run: |
+          echo '${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}' > service_account_key.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas requests google-auth google-api-python-client urllib3 pandas-gbq jupyter nbconvert
+
+      - name: Run Jupyter Notebook
+        # Ensure this matches your ACTUAL notebook filename
+        run: jupyter nbconvert --to notebook --execute --inplace Construction_BigQuery.ipynb
+
+      - name: Commit executed notebook
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Executed DOB notebook"
+          file_pattern: 'Construction_BigQuery.ipynb'
