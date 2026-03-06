@@ -1,19 +1,25 @@
 name: Run DOB Build Daily
 
 on:
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch: # Allows manual trigger from the GitHub UI
   schedule:
-    - cron: '00 14 * * *' # Runs at 2:00 PM UTC (adjust as needed)
+    - cron: '00 14 * * *' # Runs at 2:00 PM UTC daily
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
+    
+    # Permissions are required for the 'git-auto-commit-action' to push changes
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Create Service Account Key File
         run: |
+          # Ensure this secret name exactly matches what you saved in GitHub Settings
           echo '${{ secrets.SERVICE_ACCOUNT_JSON_KEY }}' > service_account_key.json
 
       - name: Set up Python
@@ -26,11 +32,12 @@ jobs:
           pip install pandas requests google-auth google-api-python-client urllib3 pandas-gbq jupyter nbconvert
 
       - name: Run Jupyter Notebook
-        # Ensure this matches your ACTUAL notebook filename
-        run: jupyter nbconvert --to notebook --execute --inplace Construction_BigQuery.ipynb
+        # FIXED: Updated to match your uploaded filename 'nyc_dob_build_approved.ipynb'
+        run: jupyter nbconvert --to notebook --execute --inplace nyc_dob_build_approved.ipynb
 
       - name: Commit executed notebook
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Automated: Executed DOB notebook"
-          file_pattern: 'Construction_BigQuery.ipynb'
+          # FIXED: Updated to match your uploaded filename
+          file_pattern: 'nyc_dob_build_approved.ipynb'
